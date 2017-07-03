@@ -19,15 +19,15 @@ import java.util.Map.Entry;
 public class Camera {
 	// the refresh rate of the tracking
 	final static int INTERVAL = 100; // milliseconds
-	double xMax, yMax, xMin, yMin, cellWidth, cellHeight;
-	Rectangle2D.Double[][] fields = new Rectangle2D.Double[3][3];
-	String fileName = "fieldSize.txt";
-	String fileNameFields ="fileNameFields.txt";
-	int minRectangleSide = 13;
+	double xBoardMax, yBoardMax, xBoardMin, yBoardMin, fieldWidth, fieldHeight;
+	Rectangle2D.Double[][] fieldsArrayGeometry = new Rectangle2D.Double[3][3];
+	String fileNameBoardDimensions = "fieldSize.txt";
+	String fileNameFieldsDimensions ="fileNameFields.txt";
+	int minFieldDimension = 13;
 	NXTCam camera = new NXTCam(SensorPort.S1); // add the camera to port 1
 	String objects = "Objects: ";
 	int numObjects;
-	int[][] fieldSet = {{9,9,9},{9,9,9},{9,9,9}};
+	int[][] fieldsArrayState = {{9,9,9},{9,9,9},{9,9,9}};
 	
 	public Camera() {
 		// configure camera
@@ -39,26 +39,26 @@ public class Camera {
 		// create nine rectangles to represent the cells
 		for (int y=0;y<3;y++) {
 			for (int x=0;x<3;x++) {
-				fields[x][y]= new Rectangle2D.Double(xMin+cellWidth*x, yMin+cellHeight*y, cellWidth, cellHeight);
+				fieldsArrayGeometry[x][y]= new Rectangle2D.Double(xBoardMin+fieldWidth*x, yBoardMin+fieldHeight*y, fieldWidth, fieldHeight);
 			}
 		}
 		// write fields to file
 		try {
-            FileWriter fileWriterFields = new FileWriter(fileNameFields,true);
+            FileWriter fileWriterFields = new FileWriter(fileNameFieldsDimensions,true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriterFields);
-            bufferedWriter.write("New Fields "+cellWidth+" "+cellHeight+" "+"\n");
+            bufferedWriter.write("New Fields "+fieldWidth+" "+fieldHeight+" "+"\n");
     			for (int y=0;y<3;y++) {
     				for (int x=0;x<3;x++) {
     					bufferedWriter.write(x+","+y+","+
-    							(int) fields[x][y].getMinX()+","+
-    							(int) fields[x][y].getMaxX()+","+
-    							(int) fields[x][y].getMinY()+","+
-    							(int) fields[x][y].getMaxY()+"\n");
+    							(int) fieldsArrayGeometry[x][y].getMinX()+","+
+    							(int) fieldsArrayGeometry[x][y].getMaxX()+","+
+    							(int) fieldsArrayGeometry[x][y].getMinY()+","+
+    							(int) fieldsArrayGeometry[x][y].getMaxY()+"\n");
     				}
     			}
             bufferedWriter.close();        }
         catch(IOException ex2) {
-            System.out.println("Error writing to file '"+ fileNameFields + "'");
+            System.out.println("Error writing to file '"+ fileNameFieldsDimensions + "'");
         }
 	}
 
@@ -66,24 +66,24 @@ public class Camera {
 	public void readCalibration() {
         String line = null;
         try {
-            FileReader fileReader = new FileReader(fileName);
+            FileReader fileReader = new FileReader(fileNameBoardDimensions);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             line = bufferedReader.readLine();
             String readFieldSize[]=line.split(",");
-            xMin=Double.parseDouble(readFieldSize[0]);
-            xMax=Double.parseDouble(readFieldSize[1]);
-            yMin=Double.parseDouble(readFieldSize[2]);
-            yMax=Double.parseDouble(readFieldSize[3]);
-    			cellWidth=(xMax-xMin)/3;
-    			cellHeight=(yMax-yMin)/3;
+            xBoardMin=Double.parseDouble(readFieldSize[0]);
+            xBoardMax=Double.parseDouble(readFieldSize[1]);
+            yBoardMin=Double.parseDouble(readFieldSize[2]);
+            yBoardMax=Double.parseDouble(readFieldSize[3]);
+    			fieldWidth=(xBoardMax-xBoardMin)/3;
+    			fieldHeight=(yBoardMax-yBoardMin)/3;
             bufferedReader.close();
             setFields();
         }
         catch(FileNotFoundException ex) {
-            System.out.println("Unable to open file '" +fileName + "'");                
+            System.out.println("Unable to open file '" +fileNameBoardDimensions + "'");                
         }
         catch(IOException ex) {
-            System.out.println("Error reading file '"+ fileName + "'");                  
+            System.out.println("Error reading file '"+ fileNameBoardDimensions + "'");                  
         }
 	}
 	
@@ -119,14 +119,14 @@ public class Camera {
 		};
 		
 		// proceed only if an object of the right size is being tracked 
-		while (numObjects==0 || c.getHeight()<minRectangleSide || c.getWidth()<minRectangleSide) {
+		while (numObjects==0 || c.getHeight()<minFieldDimension || c.getWidth()<minFieldDimension) {
 			c = camera.getRectangle(0);
 			numObjects = camera.getNumberOfObjects();
 		};
 		
 		// set the minimum values
-		xMin=c.getX();//-r.getWidth();
-		yMin=c.getY();//-r.getHeight();
+		xBoardMin=c.getX();//-r.getWidth();
+		yBoardMin=c.getY();//-r.getHeight();
 		
 		// notify the user
 		Sound.beep();
@@ -158,16 +158,16 @@ public class Camera {
 		// proceed only if an object of the right size is being tracked 
 		numObjects = camera.getNumberOfObjects();
 		c = camera.getRectangle(0);	
-		while (numObjects==0 || c.getHeight()<minRectangleSide || c.getWidth()<minRectangleSide) {
+		while (numObjects==0 || c.getHeight()<minFieldDimension || c.getWidth()<minFieldDimension) {
 			c = camera.getRectangle(0);
 			numObjects = camera.getNumberOfObjects();
 		};
 
 		// set the minimum values and the height and width of the fields
-		xMax=c.getX()+c.getWidth();
-		yMax=c.getY()+c.getHeight();
-		cellWidth=(xMax-xMin)/3;
-		cellHeight=(yMax-yMin)/3;
+		xBoardMax=c.getX()+c.getWidth();
+		yBoardMax=c.getY()+c.getHeight();
+		fieldWidth=(xBoardMax-xBoardMin)/3;
+		fieldHeight=(yBoardMax-yBoardMin)/3;
 
 		// notify the user
 		Sound.beep();
@@ -179,16 +179,16 @@ public class Camera {
 		// write field size to text file
 		try {
             // Assume default encoding.
-            FileWriter fileWriter = new FileWriter(fileName,false);
+            FileWriter fileWriter = new FileWriter(fileNameBoardDimensions,false);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-            String fieldSize=xMin+","+xMax+","+yMin+","+yMax;
+            String fieldSize=xBoardMin+","+xBoardMax+","+yBoardMin+","+yBoardMax;
             bufferedWriter.write(fieldSize);
             bufferedWriter.close();
         }
         catch(IOException ex) {
             System.out.println(
                 "Error writing to file '"
-                + fileName + "'");
+                + fileNameBoardDimensions + "'");
         }
 	}
 	
@@ -237,11 +237,11 @@ public class Camera {
 			if (numObjects >= 1 && numObjects <= 8) {
 				for (int i=0;i<numObjects;i++) {
 					Rectangle2D r = camera.getRectangle(i);
-					if (r.getHeight()>minRectangleSide && r.getWidth()>minRectangleSide) {
+					if (r.getHeight()>minFieldDimension && r.getWidth()>minFieldDimension) {
 						for (int y=0;y<3;y++) {
 							for (int x=0;x<3;x++) {
 								center.setLocation(r.getCenterX(), r.getCenterY());
-								if (fields[x][y].contains(center)) {
+								if (fieldsArrayGeometry[x][y].contains(center)) {
 									fieldSetSample[x][y][s]=camera.getObjectColor(i);
 								}
 							}
@@ -268,10 +268,10 @@ public class Camera {
 				System.out.println(line);
 				System.out.println(findMostFrequent(Array));
 				line="";
-				fieldSet[x][y]=findMostFrequent(Array);
+				fieldsArrayState[x][y]=findMostFrequent(Array);
 			}
 		}
-		return fieldSet;
+		return fieldsArrayState;
 	} // end start recording
 } // end class
 
