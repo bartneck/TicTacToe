@@ -63,7 +63,7 @@ public class Camera {
 	}
 
 	// read the field rectangle from text file
-	public void readCalibration() {
+	public void readBoardCalibration() {
         String line = null;
         try {
             FileReader fileReader = new FileReader(fileNameBoardDimensions);
@@ -88,7 +88,7 @@ public class Camera {
 	}
 	
 	
-	public void calibrate() {
+	public void calibrateBoard() {
 		LCD.clear();
 		LCD.refresh();
 		
