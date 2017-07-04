@@ -281,6 +281,9 @@ public class TicTacToe implements FeatureListener{
 				// blink yellow
 				Button.LEDPattern(6);
 				waitForHumanMove();
+				//************* Here it does not work ******************
+				test();
+				//******************************************************
 				if (!findHumanMove()) {
 					Button.LEDPattern(5);
 					Sound.buzz();
@@ -345,7 +348,9 @@ public class TicTacToe implements FeatureListener{
 	
 	public static void main(String[] args) {
 		TicTacToe ttt = new TicTacToe();
-		//ttt.test();
+		//************* Here it does work ******************
+		ttt.test();
+		//******************************************************
 		ttt.go();
 	}
 }
