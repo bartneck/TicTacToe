@@ -349,6 +349,7 @@ public class TicTacToe implements FeatureListener{
 		TicTacToe ttt = new TicTacToe();
 		//************* Here it does work ***********************
 		ttt.test();
+		
 		//*******************************************************
 		ttt.go();
 	}
