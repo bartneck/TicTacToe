@@ -22,11 +22,12 @@ public class HandSensor {
 	RangeFeatureDetector detector = new RangeFeatureDetector(rangeFinder, MAX_DISTANCE, DETECTOR_DELAY);
 	
 
-	public void getHandReading() {
+	public boolean getHandReading() {
 		for(int i=0; i<20;i++) {
 			averager.fetchSample(averageSample, 0);
 			System.out.println(i+". "+ averageSample[0]);
 			Delay.msDelay(250);
 		}
+		return true;
 	}
 }

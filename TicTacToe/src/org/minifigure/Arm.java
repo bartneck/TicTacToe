@@ -26,6 +26,11 @@ int[][][] locationArray= {
 			{-361,-6000},
 			{-477,-2500},
 			{-685,0}
+		},
+		{
+			{0,0},
+			{0,0},
+			{0,0}
 		}
 		
 };
@@ -36,12 +41,14 @@ EV3LargeRegulatedMotor gate = new EV3LargeRegulatedMotor(MotorPort.B);
 EV3MediumRegulatedMotor table = new EV3MediumRegulatedMotor(MotorPort.C);
 
 
-	public boolean putBall(int x, int y) {
+	public void putBall(int x, int y) {
 		rail.setSpeed(800);
-		this.moveToField(x,y);
+		// yes, the x and y are reversed
+		this.moveToField(y,x);
 		this.releaseBall();
-		this.moveToField(0,0); 
-		return true;
+		// move home
+		this.moveToField(3,0); 
+		//return true;
 	}
 
 	public void testArray() {

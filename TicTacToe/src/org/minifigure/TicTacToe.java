@@ -4,10 +4,13 @@ import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.*;
 import lejos.robotics.Color;
+import lejos.robotics.objectdetection.Feature;
+import lejos.robotics.objectdetection.FeatureDetector;
+import lejos.robotics.objectdetection.FeatureListener;
 import lejos.utility.Delay;
 import lejos.utility.TextMenu;
 
-public class TicTacToe {
+public class TicTacToe implements FeatureListener{
 	private static final int SAMPLESIZE=20;
 	private static long sum_points;
 	private static long[][] points = new long[3][3];
@@ -23,8 +26,8 @@ public class TicTacToe {
 	HandSensor myHandSensor = new HandSensor();
 	Arm myArm = new Arm();
 	Camera myCamera = new Camera();
-	Alarm myAlarm = new Alarm();
 	int myBoard[][]= new int[3][3];
+	boolean handDetected=false;
 	
 	public TicTacToe() {
 		// initialize the board.
@@ -34,22 +37,19 @@ public class TicTacToe {
 				board[ndx1][ndx2] = 0;
 			}
 		}
-		//myArm.testArray();
-		myHandSensor.detector.enableDetection(true);
-		myHandSensor.detector.addListener(myAlarm);
-
-		// ask for calibration
+		// connect the hand detector to this class
+		myHandSensor.detector.addListener(this);
+		// calibrate the board or read in safed calibration file
 		calibration();
-		
-
-		// myHandSensor.getHandReading();
-		// testArm(myArm);
-
-
 	}
 	
+	public void featureDetected(Feature feature, FeatureDetector detector) {
+		handDetected=true;
+		Sound.beep();
+	}
 	
 	private void calibration () {
+		/*
 		String[] menuItems={"Load","New"};
 		TextMenu menu=new TextMenu(menuItems,1,"Calibrate Field:");
 		int menu_item;
@@ -60,6 +60,11 @@ public class TicTacToe {
 			case 1: myCamera.calibrateBoard();
 			break;
 	    }
+	    */
+		LCD.clear();
+		LCD.refresh();
+		// shortcut so that I do not have to go through the menu
+		myCamera.readBoardCalibration();
 	}
 
 	private void resetPoints() {
@@ -140,6 +145,7 @@ public class TicTacToe {
 		return undec;
 	}
     
+	// miniMax algorithm to find the best move for the robot
 	private void findRobotMove(int[][] board, int move, int level) {
 		// rating function.
 		if (won(board, move)) {
@@ -177,6 +183,7 @@ public class TicTacToe {
 		}
 	}
     
+	// safe the robot's move in the board array
 	private void moveRobot(int[][] board) {
 		long max = Long.MIN_VALUE;
 		for (int i=0;i<3;i++) {
@@ -196,6 +203,7 @@ public class TicTacToe {
 		}
 	}
 	
+	// show move on the LCD screen
 	public void drawMove(int who) {
 		if (who == MOVE_ROBOT) {
 			LCD.drawString("computer move", 0, 3);
@@ -207,25 +215,17 @@ public class TicTacToe {
 		LCD.drawString("column:       ", 0, 5);
 		LCD.drawInt(g_row, 8, 5);
 	}
-	
 
-	   
+	// find and execute the next move for the robot
 	private void makeRobotMove() {
-
 		Button.LEDPattern(4);
-		myArm.moveToField(0, 0);
 		resetPoints();		
-		findRobotMove(board, SIGN_ROBOT, 1);
+		findRobotMove(board, SIGN_ROBOT, 1);	
 		moveRobot(board);
 		drawMove(MOVE_ROBOT);
-
-		// i do not need this
-		//handPencil();
-		
 		// column and row might be switched. not sure which one is x and y
+		// put ball in the desired field
 		myArm.putBall(g_row, g_column);
-		Sound.beep();
-
 	}
 
 	private boolean gameOver(int[][] board) {
@@ -239,18 +239,27 @@ public class TicTacToe {
 		return end;
 	}
 	
+	// wait for the human to make a move
+	// move detected by the IR sensor measuring the hand 
 	private void waitForHumanMove() {
-		while (!myAlarm.handDetected() && Button.ESCAPE.isUp()) {
+		myHandSensor.detector.enableDetection(true);
+		while (!handDetected && Button.ESCAPE.isUp()) {
 			// wait
+			Delay.msDelay(100);
 		}
+		handDetected=false;
+		myHandSensor.detector.enableDetection(false);
 	}
-	   
+	
+	// read the board with the camera and find the difference
 	private boolean findHumanMove() {
-		myBoard=myCamera.getBoardFields(SAMPLESIZE);
+		//System.out.println("objects: "+myCamera.cameraNXT.getNumberOfObjects());
+		int[][] myBoard=myCamera.getBoardFields(SAMPLESIZE);
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
 				if (board[i][j] == 0) {
-					if (myBoard[i][j]==COLOR_HUMAN) {
+					// I used the index for myBoard in the reversed i,j=>j,i
+					if (myBoard[j][i]==COLOR_HUMAN) {
 						board[i][j] = SIGN_HUMAN;
 						g_row = i;
 						g_column = j;
@@ -265,8 +274,8 @@ public class TicTacToe {
 	   
 	private void go () {
 		LCD.drawString("go...             ", 0, 2);
-		Delay.msDelay(1000);
-		try { 
+		Delay.msDelay(100);
+		try {
 			makeRobotMove();
 			while(!gameOver(board) && Button.ESCAPE.isUp()) {
 				// blink yellow
@@ -306,25 +315,37 @@ public class TicTacToe {
 				LCD.drawString("                  ", 0, 5);
 			}
 			Delay.msDelay(4000);
-			//closeEnvironmet(Tool4Robot.CLOSE_NORMAL);
+			//closeEnvironmet
 
 		} catch (Exception ex) {
 			System.out.println("Error: "+ex);
 		}
 	}
-	
-	public static void main(String[] args) {
-		TicTacToe ttt = new TicTacToe();
-		//ttt.go();
-	}
-	
-	private void testArm(Arm armToTest) { 
+
+	/*
+	private void testArm() { 
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
-				armToTest.putBall(i,j);
+				myArm.putBall(i, j);
 				Sound.beep();
 				LCD.drawInt(i, 0, 2);
 			}
 		}
+	}
+	*/
+	
+	private void test() {
+		for (int i=1;i<5;i++) {
+			Sound.beep();
+			System.out.println(i+" ball");
+			Delay.msDelay(3000);
+			int[][] cameraTest = myCamera.getBoardFields(SAMPLESIZE);
+		}
+	}
+	
+	public static void main(String[] args) {
+		TicTacToe ttt = new TicTacToe();
+		//ttt.test();
+		ttt.go();
 	}
 }

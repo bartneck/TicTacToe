@@ -4,6 +4,7 @@ import lejos.hardware.lcd.*;
 import lejos.hardware.port.*;
 import lejos.robotics.geometry.Point2D;
 import lejos.robotics.geometry.Rectangle2D;
+import lejos.utility.Delay;
 import lejos.hardware.device.NXTCam;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
@@ -24,15 +25,16 @@ public class Camera {
 	String fileNameBoardDimensions = "fieldSize.txt";
 	String fileNameFieldsDimensions ="fileNameFields.txt";
 	int minFieldDimension = 13;
-	NXTCam camera = new NXTCam(SensorPort.S1); // add the camera to port 1
+	NXTCam cameraNXT = new NXTCam(SensorPort.S1); // add the camera to port 1
 	String objects = "Objects: ";
 	int numObjects;
 	int[][] fieldsArrayState = {{9,9,9},{9,9,9},{9,9,9}};
+	int counter=0;
 	
 	public Camera() {
 		// configure camera
-		camera.sendCommand('A'); // sort objects by size
-		camera.sendCommand('E'); // start tracking
+		cameraNXT.sendCommand('A'); // sort objects by size
+		cameraNXT.sendCommand('E'); // start tracking
 	}
 	
 	private void setFields() {
@@ -92,16 +94,16 @@ public class Camera {
 		LCD.clear();
 		LCD.refresh();
 		
-		int numObjects = camera.getNumberOfObjects();
-		Rectangle2D c = camera.getRectangle(0);
+		int numObjects = cameraNXT.getNumberOfObjects();
+		Rectangle2D c = cameraNXT.getRectangle(0);
 		
 		// read the minimum values of the board
 		// show data until enter button is pressed
 		while(Button.ENTER.isUp()) {
 			LCD.clear();
 			LCD.drawString("Ball to 0,0", 0, 0);
-			c = camera.getRectangle(0);
-			numObjects = camera.getNumberOfObjects();
+			c = cameraNXT.getRectangle(0);
+			numObjects = cameraNXT.getNumberOfObjects();
 			// show data about the tracked object for checking
 			LCD.drawString("objects: ", 0, 1);
 			LCD.drawInt(numObjects,1,9,1);	
@@ -120,8 +122,8 @@ public class Camera {
 		
 		// proceed only if an object of the right size is being tracked 
 		while (numObjects==0 || c.getHeight()<minFieldDimension || c.getWidth()<minFieldDimension) {
-			c = camera.getRectangle(0);
-			numObjects = camera.getNumberOfObjects();
+			c = cameraNXT.getRectangle(0);
+			numObjects = cameraNXT.getNumberOfObjects();
 		};
 		
 		// set the minimum values
@@ -138,8 +140,8 @@ public class Camera {
 		while(Button.ENTER.isUp()) {
 			LCD.drawString("Ball to 2,2", 0, 0);
 			LCD.clear();
-			c = camera.getRectangle(0);
-			numObjects = camera.getNumberOfObjects();
+			c = cameraNXT.getRectangle(0);
+			numObjects = cameraNXT.getNumberOfObjects();
 			LCD.drawString("objects: ", 0, 1);
 			LCD.drawInt(numObjects,1,9,1);	
 			LCD.drawInt((int) c.getX(), 0, 3);
@@ -156,11 +158,11 @@ public class Camera {
 		};
 		
 		// proceed only if an object of the right size is being tracked 
-		numObjects = camera.getNumberOfObjects();
-		c = camera.getRectangle(0);	
+		numObjects = cameraNXT.getNumberOfObjects();
+		c = cameraNXT.getRectangle(0);	
 		while (numObjects==0 || c.getHeight()<minFieldDimension || c.getWidth()<minFieldDimension) {
-			c = camera.getRectangle(0);
-			numObjects = camera.getNumberOfObjects();
+			c = cameraNXT.getRectangle(0);
+			numObjects = cameraNXT.getNumberOfObjects();
 		};
 
 		// set the minimum values and the height and width of the fields
@@ -221,8 +223,9 @@ public class Camera {
 	// returns the state of the board
 	// requires the number of measurement samples
 	public int[][] getBoardFields(int SampleSize) {
-		
-		// initialize sample array
+		// array for sampling number of objects tracked
+		int numObjectsArrary[]= {0,0,0,0,0,0,0,0,0,0};
+		// initialize sample array for field measurements
 		int[][][] fieldsSample = new int[3][3][SampleSize];
 		for (int s=0;s<SampleSize;s++) {
 			for (int y=0;y<3;y++) {
@@ -231,20 +234,34 @@ public class Camera {
 				}
 			}	
 		}
+		// initialize center of fields variable
 		Point2D.Double centerOfField = new Point2D.Double(0.0,0.0);
 		
-		// the main loop
+		// sample number of objects ten times
+		for (int i=0;i<10;i++) {
+			numObjectsArrary[i]=cameraNXT.getNumberOfObjects();
+			//line = line +","+numObjectsArrary[i];
+			Delay.msDelay(100);
+		}
+		numObjects = findMostFrequent(numObjectsArrary);	
+		//System.out.println("Objects: "+line+" F="+numObjects);
+	
+		// the main sample loop
 		for (int s=0;s<SampleSize;s++) {
-			numObjects = camera.getNumberOfObjects();
 			if (numObjects >= 1 && numObjects <= 8) {
 				for (int i=0;i<numObjects;i++) {
-					Rectangle2D r = camera.getRectangle(i);
+					Rectangle2D r = cameraNXT.getRectangle(i);
+					// check if the detected object is above the threshold
 					if (r.getHeight()>minFieldDimension && r.getWidth()>minFieldDimension) {
+						// go through all nine fields
 						for (int y=0;y<3;y++) {
 							for (int x=0;x<3;x++) {
+								// get the center of the current field
 								centerOfField.setLocation(r.getCenterX(), r.getCenterY());
+								// check if the detected object's center is in the current field
 								if (fieldsArrayGeometry[x][y].contains(centerOfField)) {
-									fieldsSample[x][y][s]=camera.getObjectColor(i);
+									// set the field to the color of the tracked object
+									fieldsSample[x][y][s]=cameraNXT.getObjectColor(i);
 								}
 							}
 						}
@@ -257,20 +274,12 @@ public class Camera {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} // end main loop
-		String line="";
-		
+		} // end main sampling loop
+
 		// find the most frequent number for each field from sample
 		for (int y=0;y<3;y++) {
 			for (int x=0;x<3;x++) {
-				for (int s=0;s<SampleSize;s++) {
-					line = line +","+fieldsSample[x][y][s];
-				}
-				int Array[]=fieldsSample[x][y];
-				System.out.println(line);
-				System.out.println(findMostFrequent(Array));
-				line="";
-				fieldsArrayState[x][y]=findMostFrequent(Array);
+				fieldsArrayState[x][y]=findMostFrequent(fieldsSample[x][y]);
 			}
 		}
 		return fieldsArrayState;
