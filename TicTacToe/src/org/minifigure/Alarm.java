@@ -5,14 +5,19 @@ import lejos.robotics.objectdetection.Feature;
 import lejos.robotics.objectdetection.FeatureDetector;
 import lejos.robotics.objectdetection.FeatureListener;
 
-public class Alarm implements FeatureListener{
 
+public class Alarm implements FeatureListener{
+	boolean handDetected=false;
+	
 	public void featureDetected(Feature feature, FeatureDetector detector) {
 		detector.enableDetection(false);
 		// hand detected
-		Sound.beep();
-		System.out.println("hand detected");
+		handDetected=true;
 		detector.enableDetection(true);
-		System.out.println("do nothing");
-	} 
+		handDetected=false;
+	}
+	
+	public boolean handDetected() {
+		return handDetected;
+	}
 }

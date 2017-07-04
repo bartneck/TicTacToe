@@ -52,7 +52,7 @@ EV3MediumRegulatedMotor table = new EV3MediumRegulatedMotor(MotorPort.C);
 		}
 	}
 	
-	private void moveToField(int x,int y){
+	public void moveToField(int x,int y){
 		table.rotateTo(locationArray[x][y][0], true);
 		rail.rotateTo(locationArray[x][y][1], true);
 		while (table.isMoving() || rail.isMoving()) {
@@ -60,7 +60,7 @@ EV3MediumRegulatedMotor table = new EV3MediumRegulatedMotor(MotorPort.C);
 		}
 	}
 	
-	private void releaseBall() {
+	public void releaseBall() {
 		gate.rotate(90);
 		// wait for ball to leave rail
 		Delay.msDelay(1000);

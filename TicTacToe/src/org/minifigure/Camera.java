@@ -221,15 +221,17 @@ public class Camera {
 	// returns the state of the board
 	// requires the number of measurement samples
 	public int[][] getBoardFields(int SampleSize) {
-		int[][][] fieldSetSample = new int[3][3][SampleSize];
+		
+		// initialize sample array
+		int[][][] fieldsSample = new int[3][3][SampleSize];
 		for (int s=0;s<SampleSize;s++) {
 			for (int y=0;y<3;y++) {
 				for (int x=0;x<3;x++) {
-					fieldSetSample[x][y][s]=9;
+					fieldsSample[x][y][s]=9;
 				}
 			}	
 		}
-		Point2D.Double center = new Point2D.Double(0.0,0.0);
+		Point2D.Double centerOfField = new Point2D.Double(0.0,0.0);
 		
 		// the main loop
 		for (int s=0;s<SampleSize;s++) {
@@ -240,9 +242,9 @@ public class Camera {
 					if (r.getHeight()>minFieldDimension && r.getWidth()>minFieldDimension) {
 						for (int y=0;y<3;y++) {
 							for (int x=0;x<3;x++) {
-								center.setLocation(r.getCenterX(), r.getCenterY());
-								if (fieldsArrayGeometry[x][y].contains(center)) {
-									fieldSetSample[x][y][s]=camera.getObjectColor(i);
+								centerOfField.setLocation(r.getCenterX(), r.getCenterY());
+								if (fieldsArrayGeometry[x][y].contains(centerOfField)) {
+									fieldsSample[x][y][s]=camera.getObjectColor(i);
 								}
 							}
 						}
@@ -258,13 +260,13 @@ public class Camera {
 		} // end main loop
 		String line="";
 		
-		// find the most frequent number for each field
+		// find the most frequent number for each field from sample
 		for (int y=0;y<3;y++) {
 			for (int x=0;x<3;x++) {
 				for (int s=0;s<SampleSize;s++) {
-					line = line +","+fieldSetSample[x][y][s];
+					line = line +","+fieldsSample[x][y][s];
 				}
-				int Array[]=fieldSetSample[x][y];
+				int Array[]=fieldsSample[x][y];
 				System.out.println(line);
 				System.out.println(findMostFrequent(Array));
 				line="";
