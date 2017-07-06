@@ -33,8 +33,26 @@ public class Camera {
 	
 	public Camera() {
 		// configure camera
-		cameraNXT.sendCommand('A'); // sort objects by size
-		cameraNXT.sendCommand('E'); // start tracking
+		//cameraNXT.sendCommand('A'); // sort objects by size
+		//cameraNXT.sendCommand('E'); // start tracking
+		//cameraNXT.enableTracking(false);
+		//cameraNXT.sortBy('A');
+		//cameraNXT.enableTracking(true);
+		
+	}
+	
+	public void activate() {
+		cameraNXT.sortBy('A');
+		cameraNXT.enableTracking(true);
+		/*
+		Delay.msDelay(2000);
+		cameraNXT.enableTracking(false);
+		Delay.msDelay(2000);
+		cameraNXT.enableTracking(true);
+		*/
+	}
+	public void deactivate() {
+		cameraNXT.enableTracking(false);
 	}
 	
 	private void setFields() {
@@ -223,6 +241,10 @@ public class Camera {
 	// returns the state of the board
 	// requires the number of measurement samples
 	public int[][] getBoardFields(int SampleSize) {
+		
+		//cameraNXT.enableTracking(true);
+		//cameraNXT.sortBy('A');
+		
 		// array for sampling number of objects tracked
 		int numObjectsArrary[]= {0,0,0,0,0,0,0,0,0,0};
 		// initialize sample array for field measurements
@@ -244,7 +266,7 @@ public class Camera {
 			Delay.msDelay(100);
 		}
 		numObjects = findMostFrequent(numObjectsArrary);	
-		//System.out.println("Objects: "+line+" F="+numObjects);
+		System.out.println("O="+numObjects);
 	
 		// the main sample loop
 		for (int s=0;s<SampleSize;s++) {
@@ -275,13 +297,16 @@ public class Camera {
 				e.printStackTrace();
 			}
 		} // end main sampling loop
-
+		
+		String line="";
 		// find the most frequent number for each field from sample
 		for (int y=0;y<3;y++) {
 			for (int x=0;x<3;x++) {
 				fieldsArrayState[x][y]=findMostFrequent(fieldsSample[x][y]);
+				line=line+", "+findMostFrequent(fieldsSample[x][y]);
 			}
 		}
+		System.out.println(line);
 		return fieldsArrayState;
 	} // end start recording
 } // end class

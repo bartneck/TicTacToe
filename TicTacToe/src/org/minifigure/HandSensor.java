@@ -12,7 +12,7 @@ public class HandSensor {
     static final float MAX_DISTANCE = 20;
     static final int DETECTOR_DELAY = 100;
 	
-	EV3IRSensor handSensor = new EV3IRSensor(SensorPort.S2);
+	EV3IRSensor handSensor = new EV3IRSensor(SensorPort.S3);
 	SampleProvider distance = handSensor.getMode("Distance");
 	float[] sample = new float[distance.sampleSize()];
 	SampleProvider averager = new MeanFilter(distance,5);

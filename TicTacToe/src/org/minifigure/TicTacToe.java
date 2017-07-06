@@ -23,7 +23,7 @@ public class TicTacToe implements FeatureListener{
 	private static final int COLOR_ROBOT = 1; // RED BALLS
 	private int g_row;
 	private int g_column;
-	HandSensor myHandSensor = new HandSensor();
+	//HandSensor myHandSensor = new HandSensor();
 	Arm myArm = new Arm();
 	Camera myCamera = new Camera();
 	int myBoard[][]= new int[3][3];
@@ -38,13 +38,15 @@ public class TicTacToe implements FeatureListener{
 			}
 		}
 		// connect the hand detector to this class
-		myHandSensor.detector.addListener(this);
+		//myHandSensor.detector.addListener(this);
+		//myHandSensor.detector.enableDetection(false);
 		// calibrate the board or read in safed calibration file
 		calibration();
 	}
 	
 	public void featureDetected(Feature feature, FeatureDetector detector) {
 		handDetected=true;
+		System.out.println("HAND!");
 		Sound.beep();
 	}
 	
@@ -225,7 +227,12 @@ public class TicTacToe implements FeatureListener{
 		drawMove(MOVE_ROBOT);
 		// column and row might be switched. not sure which one is x and y
 		// put ball in the desired field
+		System.out.println("before arm moves");
+		//test();
 		myArm.putBall(g_row, g_column);
+		System.out.println("after arm moves");
+		test();
+		//System.out.println("arm ready");
 	}
 
 	private boolean gameOver(int[][] board) {
@@ -242,6 +249,9 @@ public class TicTacToe implements FeatureListener{
 	// wait for the human to make a move
 	// move detected by the IR sensor measuring the hand 
 	private void waitForHumanMove() {
+		System.out.println("waiting for human");
+		Delay.msDelay(5000);
+		/*
 		myHandSensor.detector.enableDetection(true);
 		while (!handDetected && Button.ESCAPE.isUp()) {
 			// wait
@@ -249,12 +259,16 @@ public class TicTacToe implements FeatureListener{
 		}
 		handDetected=false;
 		myHandSensor.detector.enableDetection(false);
+		*/
 	}
 	
 	// read the board with the camera and find the difference
 	private boolean findHumanMove() {
 		//System.out.println("objects: "+myCamera.cameraNXT.getNumberOfObjects());
+		System.out.println("find human move");
+		myCamera.activate();
 		int[][] myBoard=myCamera.getBoardFields(SAMPLESIZE);
+		myCamera.deactivate();
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
 				if (board[i][j] == 0) {
@@ -282,11 +296,11 @@ public class TicTacToe implements FeatureListener{
 				Button.LEDPattern(6);
 				waitForHumanMove();
 				//************* Here it does not work ******************
-				test();
+				 test();
 				//******************************************************
 				if (!findHumanMove()) {
 					Button.LEDPattern(5);
-					Sound.buzz();
+					//Sound.buzz();
 					LCD.drawString("human not moved.  ", 0, 4);
 					LCD.drawString("                  ", 0, 5);
 					Delay.msDelay(4000);
@@ -337,18 +351,20 @@ public class TicTacToe implements FeatureListener{
 	}
 	
 	private void test() {
-		for (int i=1;i<5;i++) {
-			Sound.beep();
+		myCamera.activate();
+		for (int i=1;i<4;i++) {
+			//Sound.beep();
 			System.out.println(i+" ball");
 			Delay.msDelay(3000);
 			int[][] cameraTest = myCamera.getBoardFields(SAMPLESIZE);
 		}
+		myCamera.deactivate();
 	}
 	
 	public static void main(String[] args) {
 		TicTacToe ttt = new TicTacToe();
 		//************* Here it does work ***********************
-		ttt.test();
+		//ttt.test();
 		//*******************************************************
 		ttt.go();
 	}
