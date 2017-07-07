@@ -39,6 +39,9 @@ public class Camera extends Thread {
 	int counter=0;
 	int SAMPLESIZE=20;
 	boolean stopped=false;
+	boolean readBlock=false;
+	int[][] buffer=new int[3][3];
+	
 	
 	public Camera() {
 		// configure camera
@@ -261,7 +264,13 @@ public class Camera extends Thread {
 	// returns the state of the board
 	// requires the number of measurement samples
 	public int[][] getBoardFields () {
-		return fieldsArrayState;
+		if (readBlock) {
+			return buffer;
+		}
+		else {
+			buffer=fieldsArrayState;
+			return fieldsArrayState;
+		}
 	}
 	
 	public void getBoardFieldInternal(int SampleSize) {
@@ -325,22 +334,24 @@ public class Camera extends Thread {
 		
 		String line="";
 		// find the most frequent number for each field from sample
+		readBlock=true;
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
 				fieldsArrayState[x][y]=findMostFrequent(fieldsSample[x][y]);
 				line=line+"-"+findMostFrequent(fieldsSample[x][y]);
 			}
 		}
-		//LCD.clear();
+		readBlock=false;
 		Sound.setVolume(1);
 		Sound.beep();
+		Sound.setVolume(8);
+		System.out.println(line);
+		//LCD.clear();
 		//LCD.drawString("Ad:"+cameraNXT.getCurrentMode(), 0, 1);
 		//LCD.drawString("Po:"+cameraNXT.getAddress(), 5, 1);
 		//LCD.drawString(numObjects+"         ", 0, 0);
 		//LCD.refresh();
-		Sound.setVolume(8);
 		//LCD.drawString(line, 0, 1);
-		System.out.println(line);
 		//return fieldsArrayState;
 	} // end getting board
 } // end class
