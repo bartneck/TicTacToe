@@ -29,17 +29,14 @@ public class Camera extends Thread {
 	// name of the files
 	String fileNameBoardDimensions = "fieldSize.txt";
 	String fileNameFieldsDimensions ="fileNameFields.txt";
-	// the minimum side length of a recognized object 
-	int minBlobDimension = 13;
+	int minBlobDimension = 13; // the minimum side length of a recognized object 
 	NXTCam cameraNXT = new NXTCam(SensorPort.S1); // add the camera to port 1
-	String objects = "Objects: ";
-	int numObjects;
+	int numObjects; // the number of objects detected
 	// 9=empty, 0=blue=human, 1=red=computer
 	int[][] fieldsArrayState = {{9,9,9},{9,9,9},{9,9,9}};
-	int counter=0;
-	int SAMPLESIZE=20;
-	boolean stopped=false;
-	boolean readBlock=false;
+	int SAMPLESIZE=15; // how many measurements are taken
+	boolean stopped=false; // gate to stop the thread
+	boolean readBlock=false; // gate to block reading
 	int[][] buffer=new int[3][3];
 	
 	
@@ -57,9 +54,10 @@ public class Camera extends Thread {
 			}
 			catch (Exception ex) {
 				//System.out.println("Error: "+ex);
+				//TODO: find a way to restart camera in case it crashes
+				//TODO: find a way to test if the camera is operational
 			}
-			
-			Delay.msDelay(100);
+			Delay.msDelay(INTERVAL);
 		}
 		// close everything and finish up
 		cameraNXT.enableTracking(false);
