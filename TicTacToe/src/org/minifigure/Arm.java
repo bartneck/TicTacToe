@@ -37,44 +37,22 @@ public class Arm {
 	}
 	
 	public void putBall(int x, int y) {
+		// move arm to target field
 		table.rotateTo(locationArray[x][y][0], true);
 		rail.rotateTo(locationArray[x][y][1], true);
+		rail.waitComplete();
 		
-		//rail.waitComplete();
+		// while (table.isMoving() || rail.isMoving()) {}
 		
-		/*
-		while (table.isMoving() || rail.isMoving()) {
-			
-		}
-		*/
-		
+		// release ball
 		gate.rotate(90);
 		// wait for ball to leave rail
-		//Delay.msDelay(1000);
+		Delay.msDelay(1000);
+		// go home
 		table.rotateTo(0, true);
 		rail.rotateTo(0, true);
-		//rail.waitComplete();
-		/*
-		while (table.isMoving() || rail.isMoving()) {
-			//Delay.msDelay(100);
-		}
-		*/
+		rail.waitComplete();
 	}
-	
-	/*
-	public void putBall(int x, int y) {
-		
-		// yes, the x and y are reversed
-		//moveToField(y,x);
-		//releaseBall();
-		// move home
-		moveHome();
-		//while (table.isMoving() || rail.isMoving()) {
-		//	Delay.msDelay(100);
-		//}
-		//System.out.println("put ball finished");
-	}
-	*/
 
 	public void testArray() {
 		for (int i=0;i<3;i++) {
@@ -82,27 +60,6 @@ public class Arm {
 				System.out.println(i+","+j+","+ locationArray[i][j][0]+","+locationArray[i][j][1]);
 			}
 		}
-	}
-	public void moveHome(){
-		table.rotateTo(0, true);
-		rail.rotateTo(0, true);
-		while (table.isMoving() || rail.isMoving()) {
-			Delay.msDelay(100);
-		}
-	}
-	
-	public void moveToField(int x,int y){
-		table.rotateTo(locationArray[x][y][0], true);
-		rail.rotateTo(locationArray[x][y][1], true);
-		while (table.isMoving() || rail.isMoving()) {
-			Delay.msDelay(100);
-		}
-	}
-	
-	public void releaseBall() {
-		gate.rotate(90);
-		// wait for ball to leave rail
-		Delay.msDelay(1000);
 	}
 }
 
