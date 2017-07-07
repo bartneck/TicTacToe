@@ -41,9 +41,7 @@ public class Arm {
 		table.rotateTo(locationArray[x][y][0], true);
 		rail.rotateTo(locationArray[x][y][1], true);
 		rail.waitComplete();
-		
 		// while (table.isMoving() || rail.isMoving()) {}
-		
 		// release ball
 		gate.rotate(90);
 		// wait for ball to leave rail
@@ -53,7 +51,8 @@ public class Arm {
 		rail.rotateTo(0, true);
 		rail.waitComplete();
 	}
-
+	
+	/*
 	public void testArray() {
 		for (int i=0;i<3;i++) {
 			for (int j=0;j<3;j++) {
@@ -61,5 +60,6 @@ public class Arm {
 			}
 		}
 	}
+	*/
 }
 

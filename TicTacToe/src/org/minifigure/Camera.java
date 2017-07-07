@@ -61,7 +61,7 @@ public class Camera extends Thread {
 			
 			Delay.msDelay(100);
 		}
-		// close and finish up
+		// close everything and finish up
 		cameraNXT.enableTracking(false);
 		cameraNXT.close();
 	}
@@ -153,12 +153,7 @@ public class Camera extends Thread {
 			LCD.drawInt((int) c.getWidth(), 0, 4);
 			LCD.drawInt((int) c.getHeight(), 4, 4);
 			LCD.refresh();
-			try {
-				Thread.sleep(INTERVAL);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			Delay.msDelay(INTERVAL);
 		};
 		
 		// proceed only if an object of the right size is being tracked 
@@ -190,12 +185,7 @@ public class Camera extends Thread {
 			LCD.drawInt((int) c.getWidth(), 0, 4);
 			LCD.drawInt((int) c.getHeight(), 4, 4);
 			LCD.refresh();
-			try {
-				Thread.sleep(INTERVAL);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			Delay.msDelay(INTERVAL);
 		};
 		
 		// proceed only if an object of the right size is being tracked 
@@ -256,6 +246,7 @@ public class Camera extends Thread {
 	        }
 	    }
 	    // this is for a tie
+	    // TODO: Consider what happens when there is a tie between two occurrences
 	    //if(maxFrequencies[1] == maxFrequencies[0])
 	    //throw new Exception();//insert whatever exception seems appropriate
 	    return mostFrequentItem;
@@ -273,12 +264,15 @@ public class Camera extends Thread {
 		}
 	}
 	
-	public void getBoardFieldInternal(int SampleSize) {
+	private void getBoardFieldInternal(int SampleSize) {
 		
 		// array for sampling number of objects tracked
 		// int numObjectsArrary[]= {0,0,0,0,0,0,0,0,0,0};
 		// initialize sample array for field measurements
+
 		int[][][] fieldsSample = new int[3][3][SampleSize];
+		java.util.Arrays.fill(fieldsSample, 9);
+		/*
 		for (int s=0;s<SampleSize;s++) {
 			for (int x=0;x<3;x++) {
 				for (int y=0;y<3;y++) {
@@ -286,6 +280,8 @@ public class Camera extends Thread {
 				}
 			}	
 		}
+		*/
+		
 		// initialize center of fields variable
 		Point2D.Double centerOfField = new Point2D.Double(0.0,0.0);
 		
@@ -303,10 +299,10 @@ public class Camera extends Thread {
 		System.out.println("Nr Objects="+numObjects);
 	
 		// the main sample loop
-		for (int s=0;s<SampleSize;s++) {
-			if (numObjects >= 1 && numObjects <= 8) {
-				for (int i=0;i<numObjects;i++) {
-					Rectangle2D r = cameraNXT.getRectangle(i);
+		for (int s=0;s<SampleSize;s++) { // take SampleSize number of measurements
+			if (numObjects >= 1 && numObjects <= 8) { // if there are 1-8 objects
+				for (int i=0;i<numObjects;i++) { // for every object
+					Rectangle2D r = cameraNXT.getRectangle(i); // get the rectangle for each object
 					// check if the detected object is above the threshold
 					if (r.getHeight()>minBlobDimension && r.getWidth()>minBlobDimension) {
 						// go through all nine fields
@@ -316,7 +312,7 @@ public class Camera extends Thread {
 								centerOfField.setLocation(r.getCenterX(), r.getCenterY());
 								// check if the detected object's center is in the current field
 								if (fieldsArrayGeometry[x][y].contains(centerOfField)) {
-									// set the field to the color of the tracked object
+									// set the fieldsSample to the color of the tracked object
 									fieldsSample[x][y][s]=cameraNXT.getObjectColor(i);
 								}
 							}
@@ -324,24 +320,20 @@ public class Camera extends Thread {
 					}
 				} // end loop of objects
 			} // end if objects big enough of objects
-			try {
-				Thread.sleep(INTERVAL);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			// This takes already long enough, so no delay is necessary
+			// Delay.msDelay(INTERVAL);
 		} // end main sampling loop
 		
 		String line="";
 		// find the most frequent number for each field from sample
-		readBlock=true;
+		readBlock=true; // prevent reading of fieldsArrayState while it is written into
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
 				fieldsArrayState[x][y]=findMostFrequent(fieldsSample[x][y]);
 				line=line+"-"+findMostFrequent(fieldsSample[x][y]);
 			}
 		}
-		readBlock=false;
+		readBlock=false; // release the read block
 		Sound.setVolume(1);
 		Sound.beep();
 		Sound.setVolume(8);

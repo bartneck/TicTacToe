@@ -7,7 +7,7 @@ import lejos.robotics.objectdetection.Feature;
 import lejos.robotics.objectdetection.FeatureDetector;
 import lejos.robotics.objectdetection.FeatureListener;
 import lejos.utility.Delay;
-import lejos.utility.TextMenu;
+//import lejos.utility.TextMenu;
 
 public class TicTacToe implements FeatureListener{
 	private static long sum_points;
@@ -18,7 +18,7 @@ public class TicTacToe implements FeatureListener{
 	private static final int MOVE_ROBOT = 1;
 	private static final int MOVE_HUMAN = 2;
 	private static final int COLOR_HUMAN = 0; // BLUE BALLS
-	private static final int COLOR_ROBOT = 1; // RED BALLS
+	// private static final int COLOR_ROBOT = 1; // RED BALLS
 	private int g_rowX;
 	private int g_columnY;
 	HandSensor myHandSensor = new HandSensor();
@@ -30,11 +30,14 @@ public class TicTacToe implements FeatureListener{
 	public TicTacToe() {
 		// initialize the board.
 		board = new int[3][3];
+		java.util.Arrays.fill(board, 0);
+		/*
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
 				board[x][y] = 0;
 			}
 		}
+		*/
 		myCamera.start();
 
 		// connect the hand detector to this class
@@ -207,7 +210,7 @@ public class TicTacToe implements FeatureListener{
 	}
 	
 	// show move on the LCD screen
-	public void drawMove(int who) {
+	private void drawMove(int who) {
 		if (who == MOVE_ROBOT) {
 			LCD.drawString("computer move", 0, 3);
 			System.out.println("computer move row:"+g_rowX+" column:"+g_columnY);
@@ -230,6 +233,7 @@ public class TicTacToe implements FeatureListener{
 		drawMove(MOVE_ROBOT);
 		// column and row might be switched. not sure which one is x and y
 		// put ball in the desired field
+		// TODO Check if the field x1,y1 from the camera is the same that arm drops the ball
 		myArm.putBall(g_rowX, g_columnY);
 	}
 
@@ -337,7 +341,7 @@ public class TicTacToe implements FeatureListener{
 		}
 	}
 
-
+	/* Not currently used
 	private void testArm() { 
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
@@ -347,6 +351,7 @@ public class TicTacToe implements FeatureListener{
 			}
 		}
 	}
+	*/
 	
 	private void testCamera() {
 		int[][] cameraTest = new int [3][3];
@@ -368,9 +373,7 @@ public class TicTacToe implements FeatureListener{
 	
 	public static void main(String[] args) {
 		TicTacToe ttt = new TicTacToe();
-		//************* Here it does work ***********************
 		ttt.testCamera();
-		//*******************************************************
-		//ttt.go();
+		ttt.go();
 	}
 }
