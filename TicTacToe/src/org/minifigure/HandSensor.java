@@ -27,8 +27,14 @@ public class HandSensor {
 		sample = new float[distance.sampleSize()];
 		averager = new MeanFilter(distance,5);
 		averageSample = new float[averager.sampleSize()];
-		rangeFinder = new RangeFinderAdapter(handSensor.getDistanceMode());	
-		detector = new RangeFeatureDetector(rangeFinder, MAX_DISTANCE, DETECTOR_DELAY);
+		try {
+			rangeFinder = new RangeFinderAdapter(handSensor.getDistanceMode());	
+			detector = new RangeFeatureDetector(rangeFinder, MAX_DISTANCE, DETECTOR_DELAY);
+		}
+		catch (Exception ex) {
+			//System.out.println("Error: "+ex);
+			//TODO: find a way to restart IR sensor in case it crashes
+		}
 	}
 	
 	public boolean getHandReading() {

@@ -40,8 +40,8 @@ public class Arm {
 		// move arm to target field
 		table.rotateTo(locationArray[x][y][0], true);
 		rail.rotateTo(locationArray[x][y][1], true);
-		rail.waitComplete();
-		// while (table.isMoving() || rail.isMoving()) {}
+		// rail.waitComplete();
+		while (table.isMoving() || rail.isMoving()) {}
 		// release ball
 		gate.rotate(90);
 		// wait for ball to leave rail
@@ -49,7 +49,8 @@ public class Arm {
 		// go home
 		table.rotateTo(0, true);
 		rail.rotateTo(0, true);
-		rail.waitComplete();
+		// rail.waitComplete();
+		while (table.isMoving() || rail.isMoving()) {}
 	}
 	
 	/*

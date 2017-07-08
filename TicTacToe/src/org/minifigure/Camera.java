@@ -16,6 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Arrays;
 
 public class Camera extends Thread {
 	// the refresh rate of the tracking
@@ -32,8 +33,8 @@ public class Camera extends Thread {
 	int minBlobDimension = 13; // the minimum side length of a recognized object 
 	NXTCam cameraNXT = new NXTCam(SensorPort.S1); // add the camera to port 1
 	int numObjects; // the number of objects detected
-	// 9=empty, 0=blue=human, 1=red=computer
-	int[][] fieldsArrayState = {{9,9,9},{9,9,9},{9,9,9}};
+	// 0=empty, 1=blue=human, 2=red=computer
+	int[][] fieldsArrayState = new int [3][3]; 
 	int SAMPLESIZE=15; // how many measurements are taken
 	boolean stopped=false; // gate to stop the thread
 	boolean readBlock=false; // gate to block reading
@@ -44,6 +45,10 @@ public class Camera extends Thread {
 		// configure camera
 		cameraNXT.sortBy('A'); // sort objects by size
 		cameraNXT.enableTracking(true); // start tracking
+		for (int[] row: fieldsArrayState) {
+		    Arrays.fill(row, 0);
+		}
+		//Arrays.fill(fieldsArrayState, 9);
 	}
 	
 	// the main loop for reading the camera
@@ -82,6 +87,7 @@ public class Camera extends Thread {
 				// create the fields based on the dimensions of the board
 				fieldsArrayGeometry[x][y]= new Rectangle2D.Double(xBoardMin+fieldWidthX*x, yBoardMin+fieldHeightY*y, fieldWidthX, fieldHeightY);
 			}
+			//System.out.println(Arrays.deepToString(fieldsArrayGeometry));
 		}
 		// write fields to file
 		try {
@@ -143,7 +149,7 @@ public class Camera extends Thread {
 			LCD.drawString("Ball to 0,0", 0, 0);
 			c = cameraNXT.getRectangle(0);
 			numObjectsCal = cameraNXT.getNumberOfObjects();
-			// show data about the tracked object for checking
+			// show data about the tracked object on screen for checking
 			LCD.drawString("objects: ", 0, 1);
 			LCD.drawInt(numObjectsCal,1,9,1);	
 			LCD.drawInt((int) c.getX(), 0, 3);
@@ -207,7 +213,7 @@ public class Camera extends Thread {
 		LCD.clear();
 		LCD.refresh();
 		
-		// write field size to text file
+		// write field sizes to text file
 		try {
             // Assume default encoding.
             FileWriter fileWriter = new FileWriter(fileNameBoardDimensions,false);
@@ -251,7 +257,6 @@ public class Camera extends Thread {
 	}
 	
 	// returns the state of the board
-	// requires the number of measurement samples
 	public int[][] getBoardFields () {
 		if (readBlock) {
 			return buffer;
@@ -269,16 +274,13 @@ public class Camera extends Thread {
 		// initialize sample array for field measurements
 
 		int[][][] fieldsSample = new int[3][3][SampleSize];
-		java.util.Arrays.fill(fieldsSample, 9);
-		/*
 		for (int s=0;s<SampleSize;s++) {
 			for (int x=0;x<3;x++) {
 				for (int y=0;y<3;y++) {
-					fieldsSample[x][y][s]=9;
+					fieldsSample[x][y][s]=0;
 				}
 			}	
 		}
-		*/
 		
 		// initialize center of fields variable
 		Point2D.Double centerOfField = new Point2D.Double(0.0,0.0);
@@ -294,7 +296,7 @@ public class Camera extends Thread {
 		*/
 		
 		numObjects = cameraNXT.getNumberOfObjects();
-		System.out.println("Nr Objects="+numObjects);
+		//System.out.println("Nr Objects="+numObjects);
 	
 		// the main sample loop
 		for (int s=0;s<SampleSize;s++) { // take SampleSize number of measurements
@@ -311,7 +313,7 @@ public class Camera extends Thread {
 								// check if the detected object's center is in the current field
 								if (fieldsArrayGeometry[x][y].contains(centerOfField)) {
 									// set the fieldsSample to the color of the tracked object
-									fieldsSample[x][y][s]=cameraNXT.getObjectColor(i);
+									fieldsSample[x][y][s]=cameraNXT.getObjectColor(i)+1;
 								}
 							}
 						}
@@ -335,7 +337,7 @@ public class Camera extends Thread {
 		Sound.setVolume(1);
 		Sound.beep();
 		Sound.setVolume(8);
-		System.out.println(line);
+		//System.out.println(line);
 		//LCD.clear();
 		//LCD.drawString("Ad:"+cameraNXT.getCurrentMode(), 0, 1);
 		//LCD.drawString("Po:"+cameraNXT.getAddress(), 5, 1);

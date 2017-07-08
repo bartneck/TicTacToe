@@ -1,5 +1,7 @@
 package org.minifigure;
 
+import java.util.Arrays;
+
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.*;
@@ -7,6 +9,7 @@ import lejos.robotics.objectdetection.Feature;
 import lejos.robotics.objectdetection.FeatureDetector;
 import lejos.robotics.objectdetection.FeatureListener;
 import lejos.utility.Delay;
+import java.util.Arrays;
 //import lejos.utility.TextMenu;
 
 public class TicTacToe implements FeatureListener{
@@ -17,8 +20,8 @@ public class TicTacToe implements FeatureListener{
 	private static final int SIGN_HUMAN = 1;
 	private static final int MOVE_ROBOT = 1;
 	private static final int MOVE_HUMAN = 2;
-	private static final int COLOR_HUMAN = 0; // BLUE BALLS
-	// private static final int COLOR_ROBOT = 1; // RED BALLS
+	private static final int COLOR_HUMAN = 1; // BLUE BALLS
+	private static final int COLOR_ROBOT = 2; // RED BALLS
 	private int g_rowX;
 	private int g_columnY;
 	HandSensor myHandSensor = new HandSensor();
@@ -30,7 +33,9 @@ public class TicTacToe implements FeatureListener{
 	public TicTacToe() {
 		// initialize the board.
 		board = new int[3][3];
-		java.util.Arrays.fill(board, 0);
+		for (int[] row: board) {
+		    Arrays.fill(row, 0);
+		}
 		/*
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
@@ -38,13 +43,14 @@ public class TicTacToe implements FeatureListener{
 			}
 		}
 		*/
-		myCamera.start();
+		
 
 		// connect the hand detector to this class
 		myHandSensor.detector.addListener(this);
 		myHandSensor.detector.enableDetection(false);
 		// calibrate the board or read in saved calibration file
 		calibration();
+		myCamera.start();
 	}
 	
 	public void featureDetected(Feature feature, FeatureDetector detector) {
@@ -212,11 +218,11 @@ public class TicTacToe implements FeatureListener{
 	// show move on the LCD screen
 	private void drawMove(int who) {
 		if (who == MOVE_ROBOT) {
-			LCD.drawString("computer move", 0, 3);
-			System.out.println("computer move row:"+g_rowX+" column:"+g_columnY);
+			LCD.drawString("c move", 0, 3);
+			//System.out.println("computer move row:"+g_rowX+" column:"+g_columnY);
 		} else if (who == MOVE_HUMAN) {
-			LCD.drawString("human move   ", 0, 3);
-			System.out.println("human move row:"+g_rowX+" column:"+g_columnY);
+			LCD.drawString("h move   ", 0, 3);
+			//System.out.println("human move row:"+g_rowX+" column:"+g_columnY);
 		}
 		LCD.drawString("row:       ", 0, 4);
 		LCD.drawInt(g_rowX, 5, 4);
@@ -231,10 +237,11 @@ public class TicTacToe implements FeatureListener{
 		findRobotMove(board, SIGN_ROBOT, 1);	
 		moveRobot(board);
 		drawMove(MOVE_ROBOT);
-		// column and row might be switched. not sure which one is x and y
 		// put ball in the desired field
-		// TODO Check if the field x1,y1 from the camera is the same that arm drops the ball
 		myArm.putBall(g_rowX, g_columnY);
+		System.out.println("Computer Move(2): x="+g_rowX+" y="+g_columnY);
+		printMatrix();
+		//board[g_rowX][g_columnY]=COLOR_ROBOT;
 	}
 
 	private boolean gameOver(int[][] board) {
@@ -265,12 +272,14 @@ public class TicTacToe implements FeatureListener{
 		//System.out.println("objects: "+myCamera.cameraNXT.getNumberOfObjects());
 
 		int[][] myBoard=myCamera.getBoardFields();
-
+		
+		/*
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
 				System.out.println("b: "+board[x][y]+" c: "+myBoard[x][y]);
 			}
 		}
+		*/
 
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
@@ -278,6 +287,7 @@ public class TicTacToe implements FeatureListener{
 				if (board[x][y] == 0) {
 					if (myBoard[x][y]==COLOR_HUMAN) {
 						board[x][y] = SIGN_HUMAN;
+						System.out.println("Human Move(1): x="+x+" y="+y);
 						g_rowX = x;
 						g_columnY = y;
 						return true;
@@ -290,11 +300,25 @@ public class TicTacToe implements FeatureListener{
 	   
 	   
 	private void go () {
+		int counter=1;
+		/*
+		System.out.println("X -------------");
+		System.out.println("0 |   |   |   |");
+		System.out.println("  -------------");
+		System.out.println("1 |   |   |   |");
+		System.out.println("  -------------");
+		System.out.println("2 |   |   |   |");
+		System.out.println("  -------------");
+		System.out.println("    0   1   2 Y");
+		*/
+		
+		System.out.println("Round: "+counter);
 		LCD.drawString("go...             ", 0, 2);
 		Delay.msDelay(100);
 		try {
 			makeRobotMove();
 			while(!gameOver(board) && Button.ESCAPE.isUp()) {
+				counter++;
 				// blink yellow
 				Button.LEDPattern(6);
 				waitForHumanMove();
@@ -309,6 +333,8 @@ public class TicTacToe implements FeatureListener{
 				// human move.
 				drawMove(MOVE_HUMAN);
 				board[g_rowX][g_columnY] = SIGN_HUMAN; // human.
+				// print internal board and camera board
+				System.out.println("Round: "+counter);
 				if (gameOver(board)) {
 					break;
 				}
@@ -353,6 +379,7 @@ public class TicTacToe implements FeatureListener{
 	}
 	*/
 	
+	/*
 	private void testCamera() {
 		int[][] cameraTest = new int [3][3];
 		String line="";
@@ -370,10 +397,41 @@ public class TicTacToe implements FeatureListener{
 			System.out.println(line);
 		}
 	}
-	
+	*/
+	private void printMatrix() {
+		String line="";
+		int[][] matrix = myCamera.getBoardFields();
+		System.out.println("Camera: ");
+		for (int x=0;x<3;x++) {
+			for (int y=0;y<3;y++) {
+				line=line+matrix[x][y];
+			}
+			System.out.println(line);
+			line="";
+		}
+		matrix = board;
+		System.out.println("Board: ");
+		for (int x=0;x<3;x++) {
+			for (int y=0;y<3;y++) {
+				line=line+matrix[x][y];
+			}
+			System.out.println(line);
+			line="";
+		}
+	}
+	/*
+	private void matrixTest(){
+		System.out.println(Arrays.deepToString(myCamera.getBoardFields()));
+		myArm.putBall(0, 0);
+		System.out.println(Arrays.deepToString(myCamera.getBoardFields()));
+		myArm.putBall(1, 0);
+		System.out.println(Arrays.deepToString(myCamera.getBoardFields()));
+	}
+	*/
 	public static void main(String[] args) {
 		TicTacToe ttt = new TicTacToe();
-		ttt.testCamera();
+		//ttt.testCamera();
+		//ttt.matrixTest();
 		ttt.go();
 	}
 }
