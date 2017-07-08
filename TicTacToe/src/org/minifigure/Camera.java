@@ -334,9 +334,9 @@ public class Camera extends Thread {
 			}
 		}
 		readBlock=false; // release the read block
-		Sound.setVolume(1);
-		Sound.beep();
-		Sound.setVolume(8);
+		//Sound.setVolume(1);
+		//Sound.beep();
+		//Sound.setVolume(8);
 		//System.out.println(line);
 		//LCD.clear();
 		//LCD.drawString("Ad:"+cameraNXT.getCurrentMode(), 0, 1);

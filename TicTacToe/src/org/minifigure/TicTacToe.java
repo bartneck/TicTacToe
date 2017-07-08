@@ -301,7 +301,6 @@ public class TicTacToe implements FeatureListener{
 	   
 	private void go () {
 		int counter=1;
-		/*
 		System.out.println("X -------------");
 		System.out.println("0 |   |   |   |");
 		System.out.println("  -------------");
@@ -310,7 +309,6 @@ public class TicTacToe implements FeatureListener{
 		System.out.println("2 |   |   |   |");
 		System.out.println("  -------------");
 		System.out.println("    0   1   2 Y");
-		*/
 		
 		System.out.println("Round: "+counter);
 		LCD.drawString("go...             ", 0, 2);
