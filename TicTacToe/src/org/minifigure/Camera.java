@@ -45,10 +45,14 @@ public class Camera extends Thread {
 		// configure camera
 		cameraNXT.sortBy('A'); // sort objects by size
 		cameraNXT.enableTracking(true); // start tracking
+		//Arrays.fill(fieldsArrayState, 9);
+		reset();
+	}
+	
+	public void reset () {
 		for (int[] row: fieldsArrayState) {
 		    Arrays.fill(row, 0);
 		}
-		//Arrays.fill(fieldsArrayState, 9);
 	}
 	
 	// the main loop for reading the camera
@@ -58,6 +62,7 @@ public class Camera extends Thread {
 				getBoardFieldInternal(SAMPLESIZE);
 			}
 			catch (Exception ex) {
+				LCD.drawString("camera failed", 0, 8);
 				//System.out.println("Error: "+ex);
 				//TODO: find a way to restart camera in case it crashes
 				//TODO: find a way to test if the camera is operational
@@ -65,8 +70,8 @@ public class Camera extends Thread {
 			Delay.msDelay(INTERVAL);
 		}
 		// close everything and finish up
-		cameraNXT.enableTracking(false);
-		cameraNXT.close();
+		//cameraNXT.enableTracking(false);
+		//cameraNXT.close();
 	}
 	
 	// not used for now
@@ -178,8 +183,8 @@ public class Camera extends Thread {
 		// read the maximum values of the board
 		// show data until enter button is pressed
 		while(Button.ENTER.isUp()) {
-			LCD.drawString("Ball to 2,2", 0, 0);
 			LCD.clear();
+			LCD.drawString("Ball to 2,2", 0, 0);
 			c = cameraNXT.getRectangle(0);
 			numObjectsCal = cameraNXT.getNumberOfObjects();
 			LCD.drawString("objects: ", 0, 1);

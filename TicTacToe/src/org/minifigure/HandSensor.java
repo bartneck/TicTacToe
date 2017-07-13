@@ -1,5 +1,7 @@
 package org.minifigure;
 
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.*;
 import lejos.robotics.SampleProvider;
@@ -22,16 +24,18 @@ public class HandSensor {
 	RangeFeatureDetector detector;
 	
 	public HandSensor() {
-		handSensor = new EV3IRSensor(SensorPort.S3);
-		distance = handSensor.getMode("Distance");
-		sample = new float[distance.sampleSize()];
-		averager = new MeanFilter(distance,5);
-		averageSample = new float[averager.sampleSize()];
 		try {
+			handSensor = new EV3IRSensor(SensorPort.S3);
+			distance = handSensor.getMode("Distance");
+			sample = new float[distance.sampleSize()];
+			averager = new MeanFilter(distance,5);
+			averageSample = new float[averager.sampleSize()];
 			rangeFinder = new RangeFinderAdapter(handSensor.getDistanceMode());	
 			detector = new RangeFeatureDetector(rangeFinder, MAX_DISTANCE, DETECTOR_DELAY);
 		}
 		catch (Exception ex) {
+			LCD.drawString("IRSensor Failed", 0, 8);
+			Sound.buzz();
 			//System.out.println("Error: "+ex);
 			//TODO: find a way to restart IR sensor in case it crashes
 		}

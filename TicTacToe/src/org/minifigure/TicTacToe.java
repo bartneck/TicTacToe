@@ -1,9 +1,13 @@
 package org.minifigure;
 
+import java.io.File;
 import java.util.Arrays;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.*;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3TouchSensor;
+import lejos.robotics.TouchAdapter;
 import lejos.robotics.objectdetection.Feature;
 import lejos.robotics.objectdetection.FeatureDetector;
 import lejos.robotics.objectdetection.FeatureListener;
@@ -19,7 +23,7 @@ public class TicTacToe implements FeatureListener{
 	private static final int MOVE_ROBOT = 1;
 	private static final int MOVE_HUMAN = 2;
 	private static final int COLOR_HUMAN = 1; // BLUE BALLS
-	private static final int COLOR_ROBOT = 2; // RED BALLS
+	//private static final int COLOR_ROBOT = 2; // RED BALLS
 	private int g_rowX;
 	private int g_columnY;
 	HandSensor myHandSensor = new HandSensor();
@@ -31,9 +35,7 @@ public class TicTacToe implements FeatureListener{
 	public TicTacToe() {
 		// initialize the board.
 		board = new int[3][3];
-		for (int[] row: board) {
-		    Arrays.fill(row, 0);
-		}
+		reset();
 
 		// connect the hand detector to this class
 		myHandSensor.detector.addListener(this);
@@ -41,6 +43,12 @@ public class TicTacToe implements FeatureListener{
 		// calibrate the board or read in saved calibration file
 		calibration();
 		myCamera.start();
+	}
+	
+	private void reset () {
+		for (int[] row: board) {
+		    Arrays.fill(row, 0);
+		}
 	}
 	
 	public void featureDetected(Feature feature, FeatureDetector detector) {
@@ -208,10 +216,10 @@ public class TicTacToe implements FeatureListener{
 	// show move on the LCD screen
 	private void drawMove(int who) {
 		if (who == MOVE_ROBOT) {
-			LCD.drawString("c move", 0, 3);
+			LCD.drawString("computer move", 0, 3);
 			//System.out.println("computer move row:"+g_rowX+" column:"+g_columnY);
 		} else if (who == MOVE_HUMAN) {
-			LCD.drawString("h move   ", 0, 3);
+			LCD.drawString("human move   ", 0, 3);
 			//System.out.println("human move row:"+g_rowX+" column:"+g_columnY);
 		}
 		LCD.drawString("row:       ", 0, 4);
@@ -221,7 +229,7 @@ public class TicTacToe implements FeatureListener{
 	}
 
 	// find and execute the next move for the robot
-	private void makeRobotMove() {
+	private boolean makeRobotMove() {
 		Button.LEDPattern(4);
 		resetPoints();		
 		findRobotMove(board, SIGN_ROBOT, 1);	
@@ -231,6 +239,11 @@ public class TicTacToe implements FeatureListener{
 		myArm.putBall(g_rowX, g_columnY);
 		//System.out.println("Computer Move(2): x="+g_rowX+" y="+g_columnY);
 		//printMatrix();
+		int[][] fieldCheck=myCamera.getBoardFields();
+		if (fieldCheck[g_rowX][g_columnY]!=2) {
+			return false;
+		}
+		return true;
 	}
 
 	private boolean gameOver(int[][] board) {
@@ -289,70 +302,105 @@ public class TicTacToe implements FeatureListener{
 	   
 	   
 	private void go () {
-		// int counter=1;
-		/*
-		System.out.println("X -------------");
-		System.out.println("2 |   |   |   |");
-		System.out.println("  -------------");
-		System.out.println("1 |   |   |   |");
-		System.out.println("  -------------");
-		System.out.println("0 |   |   |   |");
-		System.out.println("  -------------");
-		System.out.println("    0   1   2 Y");
-		System.out.println("Round: "+counter);
-		*/
-		
-		LCD.drawString("go...             ", 0, 2);
+		EV3TouchSensor touchSensor = new EV3TouchSensor(SensorPort.S2);
+		TouchAdapter touch = new TouchAdapter(touchSensor);
+		boolean moveWorked=true;
+		LCD.clear();
+		LCD.refresh();
+		LCD.drawString("press start...             ", 0, 2);
 		try {
-			makeRobotMove();
-			while(!gameOver(board) && Button.ESCAPE.isUp()) {
-				// counter++;
-				// blink yellow
-				Button.LEDPattern(6);
-				waitForHumanMove();
-				if (!findHumanMove()) {
-					Button.LEDPattern(5);
-					Sound.buzz();
-					LCD.drawString("human not moved.  ", 0, 4);
-					LCD.drawString("                  ", 0, 5);
-					Delay.msDelay(4000);
-					break;
-				}
-				// human move.
-				drawMove(MOVE_HUMAN);
-				board[g_rowX][g_columnY] = SIGN_HUMAN; // human.
-				// print internal board and camera board
-				//System.out.println("Round: "+counter);
-				if (gameOver(board)) {
-					break;
-				}
-				makeRobotMove();
-			};
-			Button.LEDPattern(8);
-			Sound.beepSequenceUp();
-			LCD.drawString("the game is over!", 0, 3);
+			File iStart = new File ("iStart.wav");
+			File myTurn = new File ("myTurn.wav");
+			File yourTurn = new File ("yourTurn.wav");
+			//File youCheated = new File ("youCheated.wav");
 
-			if (won(board, 1)) {
-				Sound.beepSequence();
-				LCD.drawString("congratulation,   ", 0, 4);
-				LCD.drawString("you have won.     ", 0, 5);
-			} else if (won(board, 2)) {
+			while (Button.ESCAPE.isUp()) {
+				LCD.drawString("press start...             ", 0, 2);
+				// wait for the start button press
+				while (!touch.isPressed() && Button.ESCAPE.isUp()) {
+					Delay.msDelay(100);
+				}
+				LCD.clear();
+				LCD.refresh();
+				if (Button.ESCAPE.isUp()) {
+					Sound.playSample(iStart, 100);
+					moveWorked = makeRobotMove();
+				};
+				
+				while(!gameOver(board) && Button.ESCAPE.isUp()) {
+					// counter++;
+					// blink yellow
+					Button.LEDPattern(6);
+					Sound.playSample(yourTurn, 100);
+					waitForHumanMove();
+					if (!findHumanMove()) {
+						Button.LEDPattern(5);
+						Sound.buzz();
+						LCD.drawString("human not moved.  ", 0, 4);
+						LCD.drawString("                  ", 0, 5);
+						Delay.msDelay(2000);
+						break;
+					}
+					/*
+					else if (!moveWorked) {
+						Button.LEDPattern(5);
+						Sound.buzz();
+						LCD.clear();
+						LCD.refresh();
+						printMatrix("board",board,8,0);
+						printMatrix("camera", myCamera.getBoardFields(),8,5);
+						while (Button.ESCAPE.isUp()) {Delay.msDelay(100);}
+						LCD.drawString("I failed move.  ", 0, 4);
+						LCD.drawString("                  ", 0, 5);
+						Delay.msDelay(2000);
+						break;
+					}
+					*/
+					// human move.
+					drawMove(MOVE_HUMAN);
+					board[g_rowX][g_columnY] = SIGN_HUMAN; // human.
+					// print internal board and camera board
+					//System.out.println("Round: "+counter);
+					if (gameOver(board)) {
+						break;
+					}
+					Sound.playSample(myTurn, 100);
+					moveWorked=makeRobotMove();
+				};
+				
+				Button.LEDPattern(8);
 				Sound.beepSequenceUp();
-				LCD.drawString("I have won.       ", 0, 4);
-				LCD.drawString("                  ", 0, 5);
-			} else {
-				Sound.twoBeeps();
-				LCD.drawString("none has won.     ", 0, 4);
-				LCD.drawString("                  ", 0, 5);
-			}
-			Delay.msDelay(1000);
-			
+				LCD.drawString("the game is over!", 0, 3);
 
-			//closeEnvironmet
-			myCamera.stopped=true;
+				if (won(board, 1)) {
+					Sound.beepSequence();
+					LCD.drawString("congratulation,   ", 0, 4);
+					LCD.drawString("you have won.     ", 0, 5);
+				} else if (won(board, 2)) {
+					Sound.beepSequenceUp();
+					LCD.drawString("I have won.       ", 0, 4);
+					LCD.drawString("                  ", 0, 5);
+				} else {
+					Sound.twoBeeps();
+					LCD.drawString("none has won.     ", 0, 4);
+					LCD.drawString("                  ", 0, 5);
+				}
+				
+				//LCD.drawString("ending game   ", 0, 4);
+				Delay.msDelay(5000);
+				// reset the board
+				reset();
+				myCamera.reset();
+				resetPoints();
+				LCD.clear();
+				LCD.refresh();
+				//closeEnvironmet
+				//myCamera.stopped=true;
+			}
 		} catch (Exception ex) {
 			System.out.println("Error: "+ex);
 		}
+
 	}
 
 	/*
@@ -387,7 +435,18 @@ public class TicTacToe implements FeatureListener{
 		}
 	}
 	*/
-	
+	private void printMatrix(String name, int[][] receivedBoard,int horizontal, int vertical) {
+		String line="";
+		LCD.drawString(name+": ",5,vertical);
+		for (int x=2;x>-1;x--) {
+			for (int y=0;y<3;y++) {
+				line=line+receivedBoard[x][y];
+			}
+			LCD.drawString(line, horizontal, vertical-x);
+			//System.out.println(line);z
+			line="";
+		}
+	}
 	/*
 	private void printMatrix() {
 		String line="";
