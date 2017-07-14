@@ -342,6 +342,7 @@ public class TicTacToe implements FeatureListener{
 						break;
 					}
 					/*
+					 * TODO: respond to incorrect ball drop
 					else if (!moveWorked) {
 						Button.LEDPattern(5);
 						Sound.buzz();
@@ -359,8 +360,6 @@ public class TicTacToe implements FeatureListener{
 					// human move.
 					drawMove(MOVE_HUMAN);
 					board[g_rowX][g_columnY] = SIGN_HUMAN; // human.
-					// print internal board and camera board
-					//System.out.println("Round: "+counter);
 					if (gameOver(board)) {
 						break;
 					}
@@ -394,13 +393,13 @@ public class TicTacToe implements FeatureListener{
 				resetPoints();
 				LCD.clear();
 				LCD.refresh();
-				//closeEnvironmet
-				//myCamera.stopped=true;
+
 			}
 		} catch (Exception ex) {
 			System.out.println("Error: "+ex);
 		}
-
+		//closeEnvironmet
+		myCamera.stopped=true;
 	}
 
 	/*
@@ -435,6 +434,7 @@ public class TicTacToe implements FeatureListener{
 		}
 	}
 	*/
+	
 	private void printMatrix(String name, int[][] receivedBoard,int horizontal, int vertical) {
 		String line="";
 		LCD.drawString(name+": ",5,vertical);
@@ -447,6 +447,7 @@ public class TicTacToe implements FeatureListener{
 			line="";
 		}
 	}
+	
 	/*
 	private void printMatrix() {
 		String line="";
@@ -480,6 +481,7 @@ public class TicTacToe implements FeatureListener{
 		System.out.println(Arrays.deepToString(myCamera.getBoardFields()));
 	}
 	*/
+	
 	public static void main(String[] args) {
 		TicTacToe ttt = new TicTacToe();
 		// methods to test the functionality of the robot

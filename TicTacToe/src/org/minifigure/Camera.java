@@ -256,8 +256,8 @@ public class Camera extends Thread {
 	    }
 	    // this is for a tie
 	    // TODO: Consider what happens when there is a tie between two occurrences
-	    //if(maxFrequencies[1] == maxFrequencies[0])
-	    //throw new Exception();//insert whatever exception seems appropriate
+	    // if(maxFrequencies[1] == maxFrequencies[0])
+	    // throw new Exception();//insert whatever exception seems appropriate
 	    return mostFrequentItem;
 	}
 	
@@ -274,10 +274,20 @@ public class Camera extends Thread {
 	
 	private void getBoardFieldInternal(int SampleSize) {
 		
+		// TODO: Check if it is necessary to sample the number of objects
 		// array for sampling number of objects tracked
 		// int numObjectsArrary[]= {0,0,0,0,0,0,0,0,0,0};
 		// initialize sample array for field measurements
-
+		// sample number of objects ten times
+		/*
+		for (int i=0;i<10;i++) {
+			numObjectsArrary[i]=cameraNXT.getNumberOfObjects();
+			//line = line +","+numObjectsArrary[i];
+			Delay.msDelay(100);
+		}
+		numObjects = findMostFrequent(numObjectsArrary);
+		*/
+		
 		int[][][] fieldsSample = new int[3][3][SampleSize];
 		for (int s=0;s<SampleSize;s++) {
 			for (int x=0;x<3;x++) {
@@ -289,17 +299,7 @@ public class Camera extends Thread {
 		
 		// initialize center of fields variable
 		Point2D.Double centerOfField = new Point2D.Double(0.0,0.0);
-		
-		// sample number of objects ten times
-		/*
-		for (int i=0;i<10;i++) {
-			numObjectsArrary[i]=cameraNXT.getNumberOfObjects();
-			//line = line +","+numObjectsArrary[i];
-			Delay.msDelay(100);
-		}
-		numObjects = findMostFrequent(numObjectsArrary);
-		*/
-		
+	
 		numObjects = cameraNXT.getNumberOfObjects();
 		//System.out.println("Nr Objects="+numObjects);
 	
@@ -329,27 +329,25 @@ public class Camera extends Thread {
 			// Delay.msDelay(INTERVAL);
 		} // end main sampling loop
 		
-		String line="";
+		//String line="";
 		// find the most frequent number for each field from sample
 		readBlock=true; // prevent reading of fieldsArrayState while it is written into
 		for (int x=0;x<3;x++) {
 			for (int y=0;y<3;y++) {
 				fieldsArrayState[x][y]=findMostFrequent(fieldsSample[x][y]);
-				line=line+"-"+findMostFrequent(fieldsSample[x][y]);
+				//line=line+"-"+findMostFrequent(fieldsSample[x][y]);
 			}
 		}
 		readBlock=false; // release the read block
-		//Sound.setVolume(1);
-		//Sound.beep();
-		//Sound.setVolume(8);
+		//option to print out array for debugging
 		//System.out.println(line);
+
+		//option to show tracking results on LCD 
 		//LCD.clear();
-		//LCD.drawString("Ad:"+cameraNXT.getCurrentMode(), 0, 1);
-		//LCD.drawString("Po:"+cameraNXT.getAddress(), 5, 1);
 		//LCD.drawString(numObjects+"         ", 0, 0);
 		//LCD.refresh();
 		//LCD.drawString(line, 0, 1);
-		//return fieldsArrayState;
+
 	} // end getting board
 } // end class
 

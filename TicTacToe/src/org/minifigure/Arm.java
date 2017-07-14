@@ -52,15 +52,5 @@ public class Arm {
 		// rail.waitComplete();
 		while (table.isMoving() || rail.isMoving()) {}
 	}
-	
-	/*
-	public void testArray() {
-		for (int i=0;i<3;i++) {
-			for (int j=0;j<3;j++) {
-				System.out.println(i+","+j+","+ locationArray[i][j][0]+","+locationArray[i][j][1]);
-			}
-		}
-	}
-	*/
 }
 
